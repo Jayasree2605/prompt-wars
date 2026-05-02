@@ -1,0 +1,42 @@
+/* ============================================================
+   CSS CUSTOM PROPERTIES — single source of truth for all tokens
+============================================================ */
+:root {
+  /* backgrounds */
+  --bg:        #f0f4f8;
+  --surface:   #ffffff;
+  --surface2:  #f8fafc;
+
+  /* borders */
+  --border:    #e2e8f0;
+
+  /* text */
+  --text:      #1e293b;
+  --muted:     #64748b;
+
+  /* brand / accent */
+  --primary:   #6366f1;
+  --primary-h: #4f46e5;  /* hover variant */
+
+  /* semantic colours */
+  --success:   #10b981;
+  --warn:      #f59e0b;
+  --danger:    #ef4444;
+  --info:      #3b82f6;
+
+  /* misc tokens */
+  --r:  12px;          /* standard border-radius */
+  --rs:  8px;          /* small border-radius */
+  --sh: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+  --sh-lg: 0 8px 32px rgba(0,0,0,.14);
+
+  /* workflow stage colours (up to 8 stages) */
+  --stage-0: #f59e0b;
+  --stage-1: #3b82f6;
+  --stage-2: #10b981;
+  --stage-3: #8b5cf6;
+  --stage-4: #ec4899;
+  --stage-5: #06b6d4;
+  --stage-6: #f97316;
+  --stage-7: #84cc16;
+}

@@ -5,1619 +5,383 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TeamFlow — Team Collaboration Board</title>
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles/variables.css" />
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/components.css" />
 
-  <style>
-    /* ============================================================
-       RESET & CSS VARIABLES
-    ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <!-- Google Identity Services (GIS) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    :root {
-      --bg:           #f0f4f8;
-      --surface:      #ffffff;
-      --border:       #e2e8f0;
-      --accent:       #6366f1;
-      --accent-dark:  #4f46e5;
-      --todo:         #f59e0b;
-      --inprogress:   #3b82f6;
-      --done:         #10b981;
-      --text:         #1e293b;
-      --muted:        #64748b;
-      --danger:       #ef4444;
-      --r:            12px;
-      --rs:           8px;
-      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
-      --shadow-lg:    0 8px 32px rgba(0,0,0,.14);
-    }
+  <!-- App config (must load before ES modules) -->
+  <script src="config.js"></script>
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.5;
-    }
-
-    /* ============================================================
-       HEADER
-    ============================================================ */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--shadow);
-    }
-
-    .logo {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-      text-decoration: none;
-    }
-
-    nav { display: flex; gap: 4px; }
-
-    .nav-btn {
-      padding: 7px 16px;
-      border: none;
-      border-radius: var(--rs);
-      background: transparent;
-      color: var(--muted);
-      font-family: inherit;
-      font-size: .875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-    }
-    .nav-btn:hover             { background: var(--bg); color: var(--text); }
-    .nav-btn.active            { background: var(--accent); color: #fff; }
-
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-
-    /* ============================================================
-       BUTTONS
-    ============================================================ */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 18px;
-      border: 1.5px solid transparent;
-      border-radius: var(--rs);
-      font-family: inherit;
-      font-size: .875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all .15s;
-      white-space: nowrap;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 12px rgba(99,102,241,.3); }
-    .btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
-    .btn-ghost:hover { background: var(--bg); color: var(--text); }
-    .btn-sm { padding: 5px 12px; font-size: .8rem; }
-
-    /* ============================================================
-       LAYOUT
-    ============================================================ */
-    main { padding: 28px; max-width: 1440px; margin: 0 auto; }
-
-    /* toolbar row above board or dashboard */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-    .toolbar-left   { display: flex; align-items: center; gap: 12px; }
-    .page-title     { font-size: 1.05rem; font-weight: 600; }
-    .task-badge {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: .78rem;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
-
-    /* search box */
-    .search-wrap { position: relative; }
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      pointer-events: none;
-      font-size: .85rem;
-    }
-    #search-input {
-      width: 220px;
-      padding: 7px 12px 7px 32px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--rs);
-      font-family: inherit;
-      font-size: .875rem;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    #search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
-    }
-
-    /* ============================================================
-       BOARD
-    ============================================================ */
-    .board {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      align-items: start;
-    }
-
-    /* column */
-    .column {
-      background: var(--surface);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-    }
-
-    .col-header {
-      padding: 16px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-radius: var(--r) var(--r) 0 0;
-      border-top: 3px solid;
-    }
-    [data-col="todo"]       .col-header { border-top-color: var(--todo); }
-    [data-col="inprogress"] .col-header { border-top-color: var(--inprogress); }
-    [data-col="done"]       .col-header { border-top-color: var(--done); }
-
-    .col-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; }
-    .col-dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    [data-col="todo"]       .col-dot { background: var(--todo); }
-    [data-col="inprogress"] .col-dot { background: var(--inprogress); }
-    [data-col="done"]       .col-dot { background: var(--done); }
-
-    .col-count {
-      background: var(--bg);
-      color: var(--muted);
-      font-size: .75rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-
-    /* drop zone */
-    .task-list {
-      padding: 12px;
-      min-height: 100px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .task-list.drop-target {
-      background: rgba(99,102,241,.04);
-      outline: 2px dashed rgba(99,102,241,.35);
-      outline-offset: -4px;
-      border-radius: 0 0 var(--r) var(--r);
-    }
-
-    /* "add card" dashed button */
-    .add-card-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-      padding: 10px;
-      border: 1.5px dashed var(--border);
-      border-radius: var(--rs);
-      background: transparent;
-      font-family: inherit;
-      font-size: .82rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .add-card-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,.03); }
-
-    /* ============================================================
-       TASK CARD
-    ============================================================ */
-    .task-card {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: var(--rs);
-      padding: 14px;
-      cursor: grab;
-      transition: box-shadow .15s, transform .15s, border-color .15s;
-      user-select: none;
-    }
-    .task-card:hover     { box-shadow: var(--shadow-lg); transform: translateY(-1px); border-color: rgba(99,102,241,.45); }
-    .task-card.dragging  { opacity: .35; cursor: grabbing; }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .card-title { font-weight: 600; font-size: .875rem; line-height: 1.4; }
-
-    /* priority badges */
-    .p-badge {
-      font-size: .67rem;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      flex-shrink: 0;
-    }
-    .p-high   { background: #fee2e2; color: #b91c1c; }
-    .p-medium { background: #fef3c7; color: #b45309; }
-    .p-low    { background: #dcfce7; color: #166534; }
-
-    .card-desc {
-      font-size: .8rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 10px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .assignee { display: flex; align-items: center; gap: 7px; }
-    .avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .67rem;
-      font-weight: 700;
-      color: #fff;
-      flex-shrink: 0;
-    }
-    .assignee-name { font-size: .78rem; color: var(--muted); font-weight: 500; }
-
-    .card-meta { display: flex; align-items: center; gap: 6px; }
-    .meta-chip { display: flex; align-items: center; gap: 3px; font-size: .73rem; color: var(--muted); }
-
-    /* card action row (icons + move buttons) */
-    .card-actions {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-    .icon-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border: none;
-      border-radius: 6px;
-      background: transparent;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: .85rem;
-      transition: background .13s, color .13s;
-      font-family: inherit;
-    }
-    .icon-btn:hover      { background: var(--bg); color: var(--text); }
-    .icon-btn.del:hover  { background: #fee2e2; color: var(--danger); }
-
-    /* move left/right buttons (keyboard + mobile) */
-    .move-group { margin-left: auto; display: flex; gap: 4px; }
-    .move-btn {
-      padding: 3px 8px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: var(--bg);
-      font-family: inherit;
-      font-size: .72rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all .13s;
-    }
-    .move-btn:not(:disabled):hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .move-btn:disabled             { opacity: .3; cursor: not-allowed; }
-
-    /* ============================================================
-       MODAL OVERLAY
-    ============================================================ */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,.5);
-      backdrop-filter: blur(4px);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal {
-      background: var(--surface);
-      border-radius: var(--r);
-      box-shadow: var(--shadow-lg);
-      width: 100%;
-      max-width: 540px;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: modalIn .18s ease;
-    }
-    .modal-wide { max-width: 660px; }
-
-    @keyframes modalIn {
-      from { transform: scale(.96) translateY(8px); opacity: 0; }
-      to   { transform: scale(1)   translateY(0);   opacity: 1; }
-    }
-
-    .modal-head {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .modal-head h2 { font-size: 1rem; font-weight: 600; flex: 1; min-width: 0; }
-
-    .modal-body   { padding: 20px 24px; }
-    .modal-foot   {
-      padding: 14px 24px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
-    /* ============================================================
-       FORMS (inside modals)
-    ============================================================ */
-    .form-group { margin-bottom: 16px; }
-    .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-    label {
-      display: block;
-      font-size: .82rem;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 5px;
-    }
-    input[type="text"], textarea, select {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--rs);
-      font-family: inherit;
-      font-size: .875rem;
-      color: var(--text);
-      background: var(--surface);
-      outline: none;
-      transition: border-color .18s, box-shadow .18s;
-    }
-    input[type="text"]:focus, textarea:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.1);
-    }
-    textarea { resize: vertical; min-height: 72px; }
-
-    /* ============================================================
-       TASK DETAIL MODAL CONTENT
-    ============================================================ */
-    .detail-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .detail-chip {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: .78rem;
-      font-weight: 500;
-      background: var(--bg);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-
-    .detail-desc {
-      background: var(--bg);
-      border-radius: var(--rs);
-      padding: 12px 14px;
-      font-size: .875rem;
-      line-height: 1.6;
-      color: var(--text);
-      margin-bottom: 20px;
-      min-height: 48px;
-    }
-
-    .section-title {
-      font-size: .85rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .cnt-badge {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: .7rem;
-      padding: 1px 7px;
-      border-radius: 20px;
-    }
-
-    /* comments list */
-    .comments-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-    .comment-item  { background: var(--bg); border-radius: var(--rs); padding: 10px 13px; }
-    .comment-head  { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-    .c-author      { font-size: .82rem; font-weight: 600; color: var(--text); }
-    .c-time        { font-size: .72rem; color: var(--muted); margin-left: auto; }
-    .c-text        { font-size: .84rem; color: var(--text); line-height: 1.5; }
-
-    .empty-msg { text-align: center; padding: 20px; color: var(--muted); font-size: .84rem; }
-
-    /* add-comment row */
-    .add-comment-wrap { display: flex; gap: 10px; align-items: flex-end; }
-    .add-comment-wrap textarea { flex: 1; min-height: 56px; }
-
-    /* status pills (used in detail + dashboard) */
-    .s-pill {
-      font-size: .69rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      flex-shrink: 0;
-    }
-    .sp-todo       { background: #fef3c7; color: #b45309; }
-    .sp-inprogress { background: #dbeafe; color: #1d4ed8; }
-    .sp-done       { background: #dcfce7; color: #166534; }
-
-    /* ============================================================
-       DASHBOARD
-    ============================================================ */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border-radius: var(--r);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      border-left: 4px solid;
-    }
-    .stat-card.s-total      { border-color: var(--accent); }
-    .stat-card.s-todo       { border-color: var(--todo); }
-    .stat-card.s-inprogress { border-color: var(--inprogress); }
-    .stat-card.s-done       { border-color: var(--done); }
-
-    .stat-label {
-      font-size: .72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .stat-val { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
-    .stat-sub { font-size: .75rem; color: var(--muted); }
-
-    /* progress card */
-    .progress-card {
-      background: var(--surface);
-      border-radius: var(--r);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      margin-bottom: 24px;
-    }
-    .progress-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .progress-head h3 { font-size: .9rem; font-weight: 600; }
-    .progress-pct { font-size: .85rem; font-weight: 600; color: var(--done); }
-
-    .progress-bar {
-      height: 10px;
-      background: var(--bg);
-      border-radius: 10px;
-      overflow: hidden;
-      display: flex;
-    }
-    .pb-todo       { background: var(--todo);       transition: width .4s ease; }
-    .pb-inprogress { background: var(--inprogress); transition: width .4s ease; }
-    .pb-done       { background: var(--done);       transition: width .4s ease; }
-
-    .progress-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
-    .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    /* dashboard panels */
-    .dash-panels { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
-
-    .panel { background: var(--surface); border-radius: var(--r); padding: 20px; box-shadow: var(--shadow); }
-    .panel h3 { font-size: .9rem; font-weight: 600; margin-bottom: 16px; }
-
-    /* team workload rows */
-    .member-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
-    .member-row:last-child { border-bottom: none; }
-    .member-info { flex: 1; }
-    .member-name { font-size: .875rem; font-weight: 500; }
-    .member-sub  { font-size: .75rem; color: var(--muted); }
-    .mini-bar-wrap { text-align: right; }
-    .mini-bar-num  { font-size: .75rem; color: var(--muted); }
-    .mini-bar { height: 5px; background: var(--bg); border-radius: 5px; width: 72px; overflow: hidden; margin-top: 3px; }
-    .mini-fill { height: 100%; background: var(--accent); border-radius: 5px; }
-
-    /* all-tasks list */
-    .task-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
-    .task-row:last-child { border-bottom: none; }
-    .task-row-info { flex: 1; min-width: 0; }
-    .task-row-title { font-size: .875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .task-row-sub   { font-size: .75rem; color: var(--muted); }
-
-    /* ============================================================
-       TOAST NOTIFICATIONS
-    ============================================================ */
-    #toast-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .toast {
-      background: #1e293b;
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: var(--rs);
-      font-size: .83rem;
-      box-shadow: var(--shadow-lg);
-      animation: toastIn .2s ease;
-    }
-    @keyframes toastIn {
-      from { transform: translateX(40px); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
-    }
-
-    /* ============================================================
-       EMPTY STATE
-    ============================================================ */
-    .empty-state { text-align: center; padding: 28px 16px; color: var(--muted); }
-    .empty-icon  { font-size: 1.8rem; margin-bottom: 8px; }
-    .empty-text  { font-size: .84rem; }
-
-    /* ============================================================
-       RESPONSIVE
-    ============================================================ */
-    @media (max-width: 1100px) {
-      .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-      .dash-panels { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 900px) {
-      .board { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      header         { padding: 0 16px; gap: 12px; }
-      main           { padding: 16px; }
-      .form-row      { grid-template-columns: 1fr; }
-      .stats-grid    { grid-template-columns: 1fr 1fr; }
-      #search-input  { width: 160px; }
-      .btn-label     { display: none; }  /* hide "Add Task" text label on small screens */
-    }
-  </style>
+  <!-- ES module entry -->
+  <script type="module" src="src/app.js"></script>
 </head>
 <body>
 
 <!-- ================================================================
-     HEADER
+     LOGIN SCREEN
 ================================================================ -->
-<header role="banner">
-  <span class="logo" aria-label="TeamFlow home">⚡ TeamFlow</span>
-
-  <nav role="navigation" aria-label="Main navigation">
-    <button class="nav-btn active" id="nav-board"
-            onclick="switchView('board')" aria-current="page">Board</button>
-    <button class="nav-btn" id="nav-dash"
-            onclick="switchView('dashboard')">Dashboard</button>
-  </nav>
-
-  <div class="header-right">
-    <button class="btn btn-primary" onclick="openAddTask()"
-            aria-label="Add new task">
-      <span aria-hidden="true">＋</span>
-      <span class="btn-label">Add Task</span>
+<div id="login-screen" class="screen" role="main">
+  <div class="auth-card">
+    <div class="logo-big">⚡ TeamFlow</div>
+    <p>Team collaboration, done right.<br>Sign in to get started.</p>
+    <button class="google-signin-btn" data-action="signin" aria-label="Sign in with Google">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+      </svg>
+      Sign in with Google
     </button>
   </div>
-</header>
+</div>
 
 <!-- ================================================================
-     MAIN CONTENT
+     SETUP SCREEN (org create / join)
 ================================================================ -->
-<main role="main">
+<div id="setup-screen" class="screen" role="main">
+  <div class="setup-card">
+    <h2>Welcome to TeamFlow</h2>
+    <p>Create a new organisation or join an existing one.</p>
 
-  <!-- ── BOARD VIEW ─────────────────────────────────────────── -->
-  <div id="board-view">
+    <div class="setup-tabs" role="tablist">
+      <button class="setup-tab active" role="tab" id="tab-create"
+              data-action="switch-setup-tab" data-tab="create">Create Org</button>
+      <button class="setup-tab" role="tab" id="tab-join"
+              data-action="switch-setup-tab" data-tab="join">Join Org</button>
+    </div>
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <span class="page-title">Task Board</span>
-        <span class="task-badge" id="task-total-badge" aria-live="polite"></span>
+    <!-- Create -->
+    <div id="setup-create-panel">
+      <div class="form-group">
+        <label for="setup-org-name">Organisation name</label>
+        <input type="text" id="setup-org-name" placeholder="Acme Inc." maxlength="80" />
       </div>
-      <div class="search-wrap">
+      <div class="form-group">
+        <label for="setup-org-domain">Email domain (optional)</label>
+        <input type="text" id="setup-org-domain" placeholder="acme.com" />
+      </div>
+      <button class="btn btn-primary" style="width:100%" data-action="setup-create">
+        Create Organisation
+      </button>
+    </div>
+
+    <!-- Join -->
+    <div id="setup-join-panel" style="display:none">
+      <div class="form-group">
+        <label for="setup-join-code">Org ID</label>
+        <input type="text" id="setup-join-code" placeholder="Paste the Org ID here" />
+      </div>
+      <button class="btn btn-primary" style="width:100%" data-action="setup-join">
+        Join Organisation
+      </button>
+    </div>
+
+    <p style="margin-top:16px;font-size:.8rem;color:var(--muted)">
+      Already signed in? &nbsp;
+      <button class="btn btn-secondary btn-sm" data-action="signout">Sign out</button>
+    </p>
+  </div>
+</div>
+
+<!-- ================================================================
+     MAIN APP
+================================================================ -->
+<div id="app">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header role="banner">
+    <span class="logo" aria-label="TeamFlow">⚡ TeamFlow</span>
+
+    <nav role="navigation" aria-label="Main navigation">
+      <button class="nav-btn active" data-action="nav" data-view="projects">Projects</button>
+      <button class="nav-btn" data-action="nav" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-action="nav" data-view="admin">Admin</button>
+    </nav>
+
+    <div class="user-menu" role="complementary" aria-label="User menu">
+      <div class="search-box">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="text" id="search-input"
-               placeholder="Search tasks…"
-               aria-label="Search tasks"
-               oninput="renderBoard()" />
+        <input type="text" id="kanban-search" placeholder="Search tasks…" aria-label="Search tasks" />
       </div>
+      <div id="header-avatar" aria-hidden="true"></div>
+      <div>
+        <div id="header-user-name" class="user-name"></div>
+        <div id="header-org-name" class="user-org"></div>
+      </div>
+      <button class="btn btn-secondary btn-sm" data-action="signout" aria-label="Sign out">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ── Main content ────────────────────────────────────────── -->
+  <main role="main">
+
+    <!-- ── Projects view ── -->
+    <div class="view active" data-view="projects">
+      <div class="view-hdr">
+        <h2>Projects</h2>
+        <button class="btn btn-primary btn-sm" data-action="new-project">+ New Project</button>
+      </div>
+      <div id="projects-grid" class="projects-grid" role="list"></div>
     </div>
 
-    <div class="board" role="region" aria-label="Task board">
-
-      <!-- To Do column -->
-      <div class="column" data-col="todo"
-           role="group" aria-labelledby="label-todo">
-        <div class="col-header">
-          <div class="col-title">
-            <span class="col-dot" aria-hidden="true"></span>
-            <span id="label-todo">To Do</span>
-          </div>
-          <span class="col-count" id="count-todo"></span>
-        </div>
-        <div class="task-list" id="list-todo"
-             role="list" aria-label="To do tasks"
-             ondragover="onDragOver(event,'todo')"
-             ondragleave="onDragLeave(event)"
-             ondrop="onDrop(event,'todo')">
-        </div>
-        <div style="padding:0 12px 12px">
-          <button class="add-card-btn" onclick="openAddTask('todo')"
-                  aria-label="Add task to To Do">
-            <span aria-hidden="true">＋</span> Add a task
-          </button>
-        </div>
+    <!-- ── Kanban view ── -->
+    <div class="view" data-view="kanban">
+      <div class="kanban-hdr">
+        <button class="back-btn" data-action="back">← Projects</button>
+        <span id="kanban-title" class="kanban-title"></span>
+        <button class="btn btn-secondary btn-sm" data-action="edit-workflow">Edit Workflow</button>
+        <button class="btn btn-secondary btn-sm" data-action="invite-member">+ Invite</button>
+        <button class="btn btn-primary btn-sm" data-action="new-task">+ Task</button>
       </div>
-
-      <!-- In Progress column -->
-      <div class="column" data-col="inprogress"
-           role="group" aria-labelledby="label-inprogress">
-        <div class="col-header">
-          <div class="col-title">
-            <span class="col-dot" aria-hidden="true"></span>
-            <span id="label-inprogress">In Progress</span>
-          </div>
-          <span class="col-count" id="count-inprogress"></span>
-        </div>
-        <div class="task-list" id="list-inprogress"
-             role="list" aria-label="In progress tasks"
-             ondragover="onDragOver(event,'inprogress')"
-             ondragleave="onDragLeave(event)"
-             ondrop="onDrop(event,'inprogress')">
-        </div>
-        <div style="padding:0 12px 12px">
-          <button class="add-card-btn" onclick="openAddTask('inprogress')"
-                  aria-label="Add task to In Progress">
-            <span aria-hidden="true">＋</span> Add a task
-          </button>
-        </div>
-      </div>
-
-      <!-- Done column -->
-      <div class="column" data-col="done"
-           role="group" aria-labelledby="label-done">
-        <div class="col-header">
-          <div class="col-title">
-            <span class="col-dot" aria-hidden="true"></span>
-            <span id="label-done">Done</span>
-          </div>
-          <span class="col-count" id="count-done"></span>
-        </div>
-        <div class="task-list" id="list-done"
-             role="list" aria-label="Completed tasks"
-             ondragover="onDragOver(event,'done')"
-             ondragleave="onDragLeave(event)"
-             ondrop="onDrop(event,'done')">
-        </div>
-        <div style="padding:0 12px 12px">
-          <button class="add-card-btn" onclick="openAddTask('done')"
-                  aria-label="Add task to Done">
-            <span aria-hidden="true">＋</span> Add a task
-          </button>
-        </div>
-      </div>
-
-    </div><!-- .board -->
-  </div><!-- #board-view -->
-
-  <!-- ── DASHBOARD VIEW ─────────────────────────────────────── -->
-  <div id="dashboard-view" style="display:none">
-
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <span class="page-title">Dashboard</span>
-      </div>
+      <div id="board" class="board" role="region" aria-label="Kanban board"></div>
     </div>
 
-    <!-- Stat cards -->
-    <div class="stats-grid" role="region" aria-label="Task statistics">
-      <div class="stat-card s-total" role="article" aria-label="Total tasks">
-        <div class="stat-label">Total Tasks</div>
-        <div class="stat-val" id="stat-total">0</div>
-        <div class="stat-sub">All tasks</div>
+    <!-- ── Dashboard view ── -->
+    <div class="view" data-view="dashboard">
+      <div class="view-hdr">
+        <h2>Dashboard</h2>
+        <button class="btn btn-secondary btn-sm" data-action="ai-sprint-insights">✨ Sprint Insights</button>
       </div>
-      <div class="stat-card s-todo" role="article" aria-label="To do tasks">
-        <div class="stat-label">To Do</div>
-        <div class="stat-val" id="stat-todo">0</div>
-        <div class="stat-sub">Not started</div>
-      </div>
-      <div class="stat-card s-inprogress" role="article" aria-label="In progress tasks">
-        <div class="stat-label">In Progress</div>
-        <div class="stat-val" id="stat-inprogress">0</div>
-        <div class="stat-sub">Active</div>
-      </div>
-      <div class="stat-card s-done" role="article" aria-label="Done tasks">
-        <div class="stat-label">Done</div>
-        <div class="stat-val" id="stat-done">0</div>
-        <div class="stat-sub">Completed</div>
-      </div>
-    </div>
 
-    <!-- Progress bar -->
-    <div class="progress-card" role="region" aria-label="Overall progress">
-      <div class="progress-head">
+      <!-- Stat cards -->
+      <div class="stats-grid" role="region" aria-label="Task statistics">
+        <div class="stat-card stat-card--total">
+          <div class="stat-label">Total Tasks</div>
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-sub">across all projects</div>
+        </div>
+        <div class="stat-card stat-card--todo">
+          <div class="stat-label">First Stage</div>
+          <div class="stat-val" id="stat-todo">0</div>
+          <div class="stat-sub">not started</div>
+        </div>
+        <div class="stat-card stat-card--progress">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-val" id="stat-progress">0</div>
+          <div class="stat-sub">active</div>
+        </div>
+        <div class="stat-card stat-card--done">
+          <div class="stat-label">Done</div>
+          <div class="stat-val" id="stat-done">0</div>
+          <div class="stat-sub" id="stat-pct">0%</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="panel" style="margin-bottom:20px">
         <h3>Overall Progress</h3>
-        <span class="progress-pct" id="progress-pct" aria-live="polite"></span>
+        <div style="height:10px;background:var(--border);border-radius:10px;overflow:hidden;display:flex"
+             role="progressbar" aria-label="Overall progress">
+          <div id="pb-todo"     style="background:var(--warn);transition:width .4s ease"></div>
+          <div id="pb-progress" style="background:var(--info);transition:width .4s ease"></div>
+          <div id="pb-done"     style="background:var(--success);transition:width .4s ease"></div>
+        </div>
       </div>
-      <div class="progress-bar"
-           role="progressbar"
-           aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-           id="progress-bar-el">
-        <div class="pb-todo"       id="pb-todo"       style="width:0%"></div>
-        <div class="pb-inprogress" id="pb-inprogress" style="width:0%"></div>
-        <div class="pb-done"       id="pb-done"       style="width:0%"></div>
-      </div>
-      <div class="progress-legend" aria-hidden="true">
-        <div class="legend-item"><span class="leg-dot" style="background:var(--todo)"></span>To Do</div>
-        <div class="legend-item"><span class="leg-dot" style="background:var(--inprogress)"></span>In Progress</div>
-        <div class="legend-item"><span class="leg-dot" style="background:var(--done)"></span>Done</div>
+
+      <!-- AI insights output -->
+      <div id="sprint-insights"></div>
+
+      <!-- Dash grid -->
+      <div class="dash-grid">
+        <div class="panel">
+          <h3>Team Workload</h3>
+          <div id="dash-workload"></div>
+        </div>
+        <div class="panel">
+          <h3>Recent Tasks</h3>
+          <div id="dash-recent"></div>
+        </div>
+        <div class="panel">
+          <h3>📅 Upcoming Meetings</h3>
+          <div id="calendar-panel">
+            <button class="btn btn-secondary btn-sm" data-action="load-calendar">Load Calendar</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Two panels -->
-    <div class="dash-panels">
-      <div class="panel" role="region" aria-label="Team workload">
-        <h3>Team Workload</h3>
-        <div id="team-workload" role="list"></div>
+    <!-- ── Admin view ── -->
+    <div class="view" data-view="admin">
+      <div class="view-hdr">
+        <h2>Admin</h2>
       </div>
-      <div class="panel" role="region" aria-label="All tasks">
-        <h3>All Tasks</h3>
-        <div id="all-tasks-list" role="list"></div>
+      <div class="panel" style="margin-bottom:16px">
+        <p style="font-size:.85rem;color:var(--muted)">
+          Org ID: <strong id="org-id-display"></strong>
+          <button class="btn btn-secondary btn-sm" style="margin-left:8px" data-action="copy-org-id">Copy</button>
+        </p>
+      </div>
+      <div class="panel">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Change Role</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
       </div>
     </div>
 
-  </div><!-- #dashboard-view -->
-
-</main>
+  </main><!-- /main -->
+</div><!-- /#app -->
 
 <!-- ================================================================
-     ADD / EDIT TASK MODAL
+     MODALS
 ================================================================ -->
-<div class="overlay" id="task-modal" style="display:none"
-     role="dialog" aria-modal="true" aria-labelledby="task-modal-title"
-     onclick="onOverlayClick(event,'task-modal',closeTaskModal)">
-  <div class="modal" role="document">
-    <div class="modal-head">
-      <h2 id="task-modal-title">New Task</h2>
-      <button class="icon-btn" onclick="closeTaskModal()"
-              aria-label="Close dialog">✕</button>
+
+<!-- Project modal -->
+<div id="proj-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="proj-modal-title"
+     data-edit-id="">
+  <div class="modal">
+    <div class="mhdr">
+      <h2 id="proj-modal-title">New Project</h2>
+      <button class="btn-icon" data-action="close-modal" data-modal="proj-overlay" aria-label="Close">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="mbody">
+      <div class="form-group">
+        <label for="proj-name">Name <span style="color:var(--danger)" aria-hidden="true">*</span></label>
+        <input type="text" id="proj-name" placeholder="Project name" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label for="proj-desc">Description</label>
+        <textarea id="proj-desc" placeholder="What is this project about?" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Workflow Stages</label>
+        <div id="wf-tags-container" class="wf-tags"></div>
+        <div class="flex gap2" style="margin-top:8px">
+          <input type="text" id="new-stage-input" placeholder="Add stage…" style="flex:1" maxlength="40" />
+          <button class="btn btn-secondary btn-sm" data-action="add-stage">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-secondary btn-sm" data-action="close-modal" data-modal="proj-overlay">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="proj-save-btn" data-action="save-project">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task modal -->
+<div id="task-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="task-modal-title"
+     data-edit-id="">
+  <div class="modal">
+    <div class="mhdr">
+      <h2 id="task-modal-title">New Task</h2>
+      <button class="btn-icon" data-action="close-modal" data-modal="task-overlay" aria-label="Close">✕</button>
+    </div>
+    <div class="mbody">
       <div class="form-group">
         <label for="task-title">Title <span style="color:var(--danger)" aria-hidden="true">*</span></label>
-        <input type="text" id="task-title"
-               placeholder="What needs to be done?"
-               maxlength="120"
-               aria-required="true" />
+        <input type="text" id="task-title" placeholder="What needs to be done?" maxlength="120" />
       </div>
       <div class="form-group">
         <label for="task-desc">Description</label>
-        <textarea id="task-desc"
-                  placeholder="Add more details…"
-                  rows="3"></textarea>
+        <textarea id="task-desc" placeholder="Add details…" rows="3"></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="task-assignee">Assignee</label>
-          <select id="task-assignee" aria-label="Select assignee"></select>
+          <select id="task-assignee"></select>
         </div>
         <div class="form-group">
-          <label for="task-priority">Priority</label>
-          <select id="task-priority" aria-label="Select priority">
+          <label for="task-prio">Priority</label>
+          <select id="task-prio">
             <option value="low">Low</option>
             <option value="medium" selected>Medium</option>
             <option value="high">High</option>
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="task-stage">Stage</label>
+          <select id="task-stage"></select>
+        </div>
+        <div class="form-group">
+          <label for="task-due">Due date</label>
+          <input type="date" id="task-due" />
+        </div>
+      </div>
+    </div>
+    <div class="mfooter">
+      <button class="btn btn-secondary btn-sm" data-action="close-modal" data-modal="task-overlay">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="task-save-btn" data-action="save-task">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task detail modal -->
+<div id="detail-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title"
+     data-task-id="">
+  <div class="modal wide">
+    <div class="mhdr">
+      <h2 id="detail-title"></h2>
+      <div class="flex gap2">
+        <button class="btn btn-secondary btn-sm" data-action="edit-task" id="detail-edit-btn">✏️ Edit</button>
+        <button class="btn-icon btn-icon--del" data-action="delete-task" id="detail-delete-btn" title="Delete task">🗑</button>
+        <button class="btn-icon" data-action="close-modal" data-modal="detail-overlay" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="mbody" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- Workflow editor overlay (reuses proj-overlay) -->
+
+<!-- Invite member overlay -->
+<div id="invite-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+  <div class="modal">
+    <div class="mhdr">
+      <h2 id="invite-title">Invite Member</h2>
+      <button class="btn-icon" data-action="close-modal" data-modal="invite-overlay" aria-label="Close">✕</button>
+    </div>
+    <div class="mbody">
+      <p style="margin-bottom:16px;font-size:.875rem;color:var(--muted)">
+        Share your Organisation ID with the person you want to invite.<br>
+        They can use it on the setup screen to join your org.
+      </p>
       <div class="form-group">
-        <label for="task-status">Status</label>
-        <select id="task-status" aria-label="Select status">
-          <option value="todo">To Do</option>
-          <option value="inprogress">In Progress</option>
-          <option value="done">Done</option>
-        </select>
+        <label>Organisation ID</label>
+        <div class="flex gap2">
+          <input type="text" id="org-id-invite" readonly style="font-family:monospace" />
+          <button class="btn btn-primary btn-sm" data-action="copy-org-id">Copy</button>
+        </div>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn btn-primary btn-sm" id="save-task-btn"
-              onclick="saveTask()">Create Task</button>
+    <div class="mfooter">
+      <button class="btn btn-secondary btn-sm" data-action="close-modal" data-modal="invite-overlay">Close</button>
     </div>
   </div>
 </div>
 
-<!-- ================================================================
-     TASK DETAIL MODAL (comments live here)
-================================================================ -->
-<div class="overlay" id="detail-modal" style="display:none"
-     role="dialog" aria-modal="true" aria-labelledby="detail-title"
-     onclick="onOverlayClick(event,'detail-modal',closeDetailModal)">
-  <div class="modal modal-wide" role="document">
-    <div class="modal-head">
-      <h2 id="detail-title" style="word-break:break-word"></h2>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <button class="btn btn-ghost btn-sm"
-                onclick="openEditTask(currentDetailId)"
-                aria-label="Edit task">✏️ Edit</button>
-        <button class="icon-btn del"
-                onclick="deleteFromDetail()"
-                aria-label="Delete task">🗑</button>
-        <button class="icon-btn"
-                onclick="closeDetailModal()"
-                aria-label="Close dialog">✕</button>
-      </div>
-    </div>
-    <div class="modal-body" id="detail-body"></div>
-  </div>
-</div>
+<!-- Toast container -->
+<div id="toast-wrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
 
-<!-- ================================================================
-     TOAST CONTAINER
-================================================================ -->
-<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-
-<!-- ================================================================
-     JAVASCRIPT
-================================================================ -->
+<!-- Setup tab switcher (needs to be a separate script since modules are deferred) -->
 <script>
-/* ============================================================
-   UTILITIES
-============================================================ */
-
-/** Generate a collision-resistant unique ID. */
-const genId = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID)
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-/** Shorthand for document.getElementById. */
-const $ = id => document.getElementById(id);
-
-/** Escape HTML special characters to prevent XSS. */
-const esc = s => String(s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-/** Relative time string, e.g. "3h ago". */
-function timeAgo(ts) {
-  const m = Math.floor((Date.now() - ts) / 60000);
-  if (m < 1)   return 'just now';
-  if (m < 60)  return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24)  return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-/** Show a temporary toast notification. */
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  $('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-
-/* ============================================================
-   AVATAR HELPERS
-============================================================ */
-
-const AVATAR_PALETTE = [
-  '#6366f1','#ec4899','#f59e0b','#10b981',
-  '#3b82f6','#8b5cf6','#ef4444','#06b6d4',
-  '#84cc16','#f97316'
-];
-
-/** Deterministic color for a name. */
-function avatarColor(name) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++)
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-}
-
-/** Up-to-two-letter initials. */
-const initials = name =>
-  name.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
-
-/** Return an avatar <div> as an HTML string. */
-function avatarHTML(name, size = 26) {
-  const bg   = avatarColor(name);
-  const init = initials(name);
-  return `<div class="avatar"
-               style="background:${bg};width:${size}px;height:${size}px"
-               aria-hidden="true">${esc(init)}</div>`;
-}
-
-/* ============================================================
-   STATE & PERSISTENCE
-============================================================ */
-
-const STORAGE_KEY = 'teamflow_v1';
-
-/** Application state — single source of truth. */
-let state = { tasks: [], teamMembers: [] };
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    state = raw ? JSON.parse(raw) : defaultState();
-  } catch {
-    state = defaultState();
-  }
-  if (!state.tasks)       state.tasks       = [];
-  if (!state.teamMembers) state.teamMembers = [];
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-/** Seed data shown the very first time the app loads. */
-function defaultState() {
-  const members = ['Alice', 'Bob', 'Charlie', 'Diana', 'Evan'];
-  return {
-    teamMembers: members,
-    tasks: [
-      {
-        id: genId(),
-        title: 'Design landing page mockup',
-        description: 'Create wireframes and high-fidelity designs for the new marketing landing page.',
-        assignee: 'Alice', status: 'done', priority: 'high',
-        createdAt: Date.now() - 86400000 * 3,
-        comments: [
-          { id: genId(), author: 'Bob',
-            text: 'Looks great! Just a few color tweaks needed.',
-            timestamp: Date.now() - 86400000 * 2 }
-        ]
-      },
-      {
-        id: genId(),
-        title: 'Set up CI/CD pipeline',
-        description: 'Configure GitHub Actions for automated testing and deployment to staging.',
-        assignee: 'Evan', status: 'inprogress', priority: 'high',
-        createdAt: Date.now() - 86400000 * 2, comments: []
-      },
-      {
-        id: genId(),
-        title: 'Write unit tests for auth module',
-        description: 'Cover login, logout, password reset, and session-expiry edge cases.',
-        assignee: 'Charlie', status: 'inprogress', priority: 'medium',
-        createdAt: Date.now() - 86400000,
-        comments: [
-          { id: genId(), author: 'Alice',
-            text: "Don't forget 2FA edge cases!",
-            timestamp: Date.now() - 3600000 }
-        ]
-      },
-      {
-        id: genId(),
-        title: 'Update API documentation',
-        description: 'Add missing REST endpoints to Swagger / OpenAPI docs.',
-        assignee: 'Diana', status: 'todo', priority: 'low',
-        createdAt: Date.now() - 7200000, comments: []
-      },
-      {
-        id: genId(),
-        title: 'Fix responsive layout on mobile',
-        description: 'Sidebar breaks on screens < 480 px. Investigate and fix with flex/grid.',
-        assignee: 'Bob', status: 'todo', priority: 'medium',
-        createdAt: Date.now() - 3600000, comments: []
-      },
-      {
-        id: genId(),
-        title: 'Code review: checkout flow',
-        description: 'Review PR #42 for the new multi-step checkout flow.',
-        assignee: 'Alice', status: 'todo', priority: 'medium',
-        createdAt: Date.now(), comments: []
-      }
-    ]
-  };
-}
-
-/* ============================================================
-   VIEW SWITCHING (Board ↔ Dashboard)
-============================================================ */
-
-function switchView(view) {
-  $('board-view').style.display     = view === 'board'     ? 'block' : 'none';
-  $('dashboard-view').style.display = view === 'dashboard' ? 'block' : 'none';
-  $('nav-board').classList.toggle('active', view === 'board');
-  $('nav-dash').classList.toggle('active',  view === 'dashboard');
-  $('nav-board').setAttribute('aria-current', view === 'board'     ? 'page' : 'false');
-  $('nav-dash').setAttribute('aria-current',  view === 'dashboard' ? 'page' : 'false');
-  if (view === 'dashboard') renderDashboard();
-}
-
-/* ============================================================
-   BOARD RENDERING
-============================================================ */
-
-function renderBoard() {
-  const q = ($('search-input').value || '').toLowerCase();
-
-  ['todo', 'inprogress', 'done'].forEach(col => {
-    let tasks = state.tasks.filter(t => t.status === col);
-
-    // filter by search query
-    if (q) tasks = tasks.filter(t =>
-      t.title.toLowerCase().includes(q) ||
-      t.assignee.toLowerCase().includes(q) ||
-      (t.description || '').toLowerCase().includes(q)
-    );
-
-    $(`count-${col}`).textContent = tasks.length;
-
-    const list = $(`list-${col}`);
-    list.innerHTML = '';
-
-    if (tasks.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state" role="listitem">
-          <div class="empty-icon">📋</div>
-          <div class="empty-text">${q ? 'No matching tasks' : 'No tasks yet'}</div>
-        </div>`;
-    } else {
-      tasks.forEach(t => list.appendChild(makeCard(t)));
-    }
+  // Non-module: handle setup tab switching before ES modules boot
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action="switch-setup-tab"]');
+    if (!btn) return;
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.setup-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab));
+    document.getElementById('setup-create-panel').style.display =
+      tab === 'create' ? '' : 'none';
+    document.getElementById('setup-join-panel').style.display =
+      tab === 'join' ? '' : 'none';
   });
-
-  const n = state.tasks.length;
-  $('task-total-badge').textContent = `${n} task${n !== 1 ? 's' : ''}`;
-}
-
-/** Build and return a task card DOM element. */
-function makeCard(task) {
-  const el = document.createElement('div');
-  el.className = 'task-card';
-  el.setAttribute('draggable', 'true');
-  el.setAttribute('role', 'listitem');
-  el.setAttribute('data-id', task.id);
-  el.setAttribute('aria-label',
-    `Task: ${task.title}. Assigned to ${task.assignee}. Priority: ${task.priority}.`);
-
-  el.addEventListener('dragstart', e => onDragStart(e, task.id));
-  el.addEventListener('dragend',   onDragEnd);
-
-  const pClass  = { high:'p-high', medium:'p-medium', low:'p-low' }[task.priority] || 'p-medium';
-  const nCom    = (task.comments || []).length;
-  const isFirst = task.status === 'todo';
-  const isLast  = task.status === 'done';
-
-  el.innerHTML = `
-    <div class="card-top">
-      <div class="card-title">${esc(task.title)}</div>
-      <span class="p-badge ${pClass}" aria-label="Priority: ${task.priority}">${task.priority}</span>
-    </div>
-    ${task.description
-        ? `<div class="card-desc">${esc(task.description)}</div>`
-        : ''}
-    <div class="card-footer">
-      <div class="assignee">
-        ${avatarHTML(task.assignee)}
-        <span class="assignee-name">${esc(task.assignee)}</span>
-      </div>
-      <div class="card-meta">
-        ${nCom > 0
-          ? `<span class="meta-chip" aria-label="${nCom} comment${nCom>1?'s':''}">💬 ${nCom}</span>`
-          : ''}
-        <span class="meta-chip" aria-label="Created ${timeAgo(task.createdAt)}">
-          🕐 ${timeAgo(task.createdAt)}
-        </span>
-      </div>
-    </div>
-    <div class="card-actions">
-      <button class="icon-btn"
-              aria-label="View comments"
-              title="Comments"
-              onclick="openDetail('${task.id}')">💬</button>
-      <button class="icon-btn"
-              aria-label="Edit task"
-              title="Edit"
-              onclick="openEditTask('${task.id}')">✏️</button>
-      <button class="icon-btn del"
-              aria-label="Delete task"
-              title="Delete"
-              onclick="deleteTask('${task.id}')">🗑</button>
-      <div class="move-group" role="group" aria-label="Move task between columns">
-        <button class="move-btn"
-                aria-label="Move to previous column"
-                title="Move back"
-                ${isFirst ? 'disabled' : ''}
-                onclick="moveTask('${task.id}', -1)">◀ Back</button>
-        <button class="move-btn"
-                aria-label="Move to next column"
-                title="Move forward"
-                ${isLast ? 'disabled' : ''}
-                onclick="moveTask('${task.id}', 1)">Next ▶</button>
-      </div>
-    </div>`;
-
-  return el;
-}
-
-/* ============================================================
-   DRAG AND DROP
-============================================================ */
-
-let dragId = null; // ID of the card currently being dragged
-
-function onDragStart(e, id) {
-  dragId = id;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
-  clearDropTargets();
-}
-
-function onDragOver(e, col) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  clearDropTargets();
-  $(`list-${col}`).classList.add('drop-target');
-}
-
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drop-target');
-}
-
-function onDrop(e, col) {
-  e.preventDefault();
-  clearDropTargets();
-  if (!dragId) return;
-  const task = state.tasks.find(t => t.id === dragId);
-  if (task && task.status !== col) {
-    task.status = col;
-    saveState();
-    renderBoard();
-    toast(`Moved to "${colLabel(col)}"`);
-  }
-  dragId = null;
-}
-
-function clearDropTargets() {
-  document.querySelectorAll('.task-list').forEach(l =>
-    l.classList.remove('drop-target'));
-}
-
-/* ============================================================
-   MOVE BUTTONS (keyboard / mobile fallback)
-============================================================ */
-
-const COL_ORDER = ['todo', 'inprogress', 'done'];
-
-function moveTask(id, dir) {
-  const task = state.tasks.find(t => t.id === id);
-  if (!task) return;
-  const next = COL_ORDER.indexOf(task.status) + dir;
-  if (next < 0 || next >= COL_ORDER.length) return;
-  task.status = COL_ORDER[next];
-  saveState();
-  renderBoard();
-  toast(`Moved to "${colLabel(task.status)}"`);
-}
-
-/** Human-readable column label. */
-const colLabel = col =>
-  ({ todo: 'To Do', inprogress: 'In Progress', done: 'Done' }[col] || col);
-
-/* ============================================================
-   ADD / EDIT TASK MODAL
-============================================================ */
-
-let editingId = null; // null = new task; string = existing task ID
-
-/** Populate the assignee <select> with current team members. */
-function populateAssignees(selectId, currentVal) {
-  const sel = $(selectId);
-  sel.innerHTML = state.teamMembers
-    .map(m => `<option value="${esc(m)}"${m === currentVal ? ' selected' : ''}>${esc(m)}</option>`)
-    .join('');
-}
-
-/** Open modal in "add" mode, pre-selecting a column status. */
-function openAddTask(status = 'todo') {
-  editingId = null;
-  $('task-modal-title').textContent = 'New Task';
-  $('save-task-btn').textContent    = 'Create Task';
-  $('task-title').value             = '';
-  $('task-desc').value              = '';
-  $('task-priority').value          = 'medium';
-  $('task-status').value            = status;
-  populateAssignees('task-assignee');
-  $('task-modal').style.display = 'flex';
-  setTimeout(() => $('task-title').focus(), 50);
-}
-
-/** Open modal in "edit" mode for an existing task. */
-function openEditTask(id) {
-  const task = state.tasks.find(t => t.id === id);
-  if (!task) return;
-
-  editingId = id;
-  $('task-modal-title').textContent = 'Edit Task';
-  $('save-task-btn').textContent    = 'Save Changes';
-  $('task-title').value             = task.title;
-  $('task-desc').value              = task.description || '';
-  $('task-priority').value          = task.priority;
-  $('task-status').value            = task.status;
-  populateAssignees('task-assignee', task.assignee);
-
-  closeDetailModal(); // close detail if it was open
-  $('task-modal').style.display = 'flex';
-  setTimeout(() => $('task-title').focus(), 50);
-}
-
-/** Validate and save (create or update) a task. */
-function saveTask() {
-  const title = $('task-title').value.trim();
-  if (!title) {
-    $('task-title').focus();
-    $('task-title').style.borderColor = 'var(--danger)';
-    setTimeout(() => $('task-title').style.borderColor = '', 1600);
-    return;
-  }
-
-  if (editingId) {
-    const task = state.tasks.find(t => t.id === editingId);
-    if (task) {
-      task.title       = title;
-      task.description = $('task-desc').value.trim();
-      task.assignee    = $('task-assignee').value;
-      task.priority    = $('task-priority').value;
-      task.status      = $('task-status').value;
-      saveState();
-      renderBoard();
-      toast('Task updated ✓');
-    }
-  } else {
-    state.tasks.push({
-      id:          genId(),
-      title,
-      description: $('task-desc').value.trim(),
-      assignee:    $('task-assignee').value,
-      priority:    $('task-priority').value,
-      status:      $('task-status').value,
-      createdAt:   Date.now(),
-      comments:    []
-    });
-    saveState();
-    renderBoard();
-    toast('Task created! 🎉');
-  }
-
-  closeTaskModal();
-}
-
-function closeTaskModal() {
-  $('task-modal').style.display = 'none';
-  editingId = null;
-}
-
-/* ============================================================
-   DELETE TASK
-============================================================ */
-
-function deleteTask(id) {
-  if (!confirm('Delete this task? This cannot be undone.')) return;
-  state.tasks = state.tasks.filter(t => t.id !== id);
-  saveState();
-  renderBoard();
-  toast('Task deleted');
-}
-
-/* ============================================================
-   TASK DETAIL MODAL (with comments)
-============================================================ */
-
-let currentDetailId = null;
-
-function openDetail(id) {
-  currentDetailId = id;
-  renderDetail();
-  $('detail-modal').style.display = 'flex';
-}
-
-/** Re-render the detail modal body for the current task. */
-function renderDetail() {
-  const task = state.tasks.find(t => t.id === currentDetailId);
-  if (!task) { closeDetailModal(); return; }
-
-  $('detail-title').textContent = task.title;
-
-  const statusLabel = colLabel(task.status);
-  const sCls  = { todo:'sp-todo', inprogress:'sp-inprogress', done:'sp-done' }[task.status];
-  const pCls  = { high:'p-high', medium:'p-medium', low:'p-low' }[task.priority];
-  const coms  = task.comments || [];
-
-  /* build comments HTML */
-  const comsHTML = coms.length === 0
-    ? `<p class="empty-msg">No comments yet — be the first!</p>`
-    : coms.map(c => `
-        <div class="comment-item" role="article">
-          <div class="comment-head">
-            ${avatarHTML(c.author, 22)}
-            <span class="c-author">${esc(c.author)}</span>
-            <span class="c-time">${timeAgo(c.timestamp)}</span>
-          </div>
-          <p class="c-text">${esc(c.text)}</p>
-        </div>`).join('');
-
-  $('detail-body').innerHTML = `
-    <div class="detail-meta">
-      <span class="detail-chip">${avatarHTML(task.assignee, 20)} ${esc(task.assignee)}</span>
-      <span class="detail-chip"><span class="s-pill ${sCls}">${statusLabel}</span></span>
-      <span class="detail-chip"><span class="p-badge ${pCls}">${task.priority}</span></span>
-      <span class="detail-chip" title="Created">🕐 ${timeAgo(task.createdAt)}</span>
-    </div>
-
-    <div class="detail-desc" aria-label="Task description">
-      ${task.description
-          ? esc(task.description)
-          : '<em style="color:var(--muted)">No description provided.</em>'}
-    </div>
-
-    <div class="section-title">
-      💬 Comments
-      <span class="cnt-badge" aria-label="${coms.length} comments">${coms.length}</span>
-    </div>
-
-    <div class="comments-list" role="list" aria-label="Comments">
-      ${comsHTML}
-    </div>
-
-    <div class="add-comment-wrap">
-      <div style="flex:1">
-        <select id="cmt-author" aria-label="Your name" style="margin-bottom:8px">
-          ${state.teamMembers.map(m =>
-              `<option value="${esc(m)}">${esc(m)}</option>`).join('')}
-        </select>
-        <textarea id="cmt-text"
-                  placeholder="Write a comment…"
-                  rows="2"
-                  aria-label="Comment text"></textarea>
-      </div>
-      <button class="btn btn-primary btn-sm"
-              onclick="addComment()"
-              aria-label="Post comment"
-              style="height:fit-content">Post</button>
-    </div>`;
-}
-
-/** Add a comment to the current detail task. */
-function addComment() {
-  const text   = $('cmt-text').value.trim();
-  const author = $('cmt-author').value;
-  if (!text) { $('cmt-text').focus(); return; }
-
-  const task = state.tasks.find(t => t.id === currentDetailId);
-  if (!task) return;
-
-  task.comments = task.comments || [];
-  task.comments.push({ id: genId(), author, text, timestamp: Date.now() });
-  saveState();
-  renderDetail();
-  renderBoard(); // update comment badge on card
-  toast('Comment posted');
-}
-
-/** Delete the task from within the detail modal. */
-function deleteFromDetail() {
-  const id = currentDetailId;
-  closeDetailModal();
-  deleteTask(id);
-}
-
-function closeDetailModal() {
-  $('detail-modal').style.display = 'none';
-  currentDetailId = null;
-}
-
-/* ============================================================
-   DASHBOARD RENDERING
-============================================================ */
-
-function renderDashboard() {
-  const tasks      = state.tasks;
-  const total      = tasks.length;
-  const nTodo      = tasks.filter(t => t.status === 'todo').length;
-  const nProgress  = tasks.filter(t => t.status === 'inprogress').length;
-  const nDone      = tasks.filter(t => t.status === 'done').length;
-  const donePct    = total > 0 ? Math.round((nDone / total) * 100) : 0;
-
-  /* stat cards */
-  $('stat-total').textContent      = total;
-  $('stat-todo').textContent       = nTodo;
-  $('stat-inprogress').textContent = nProgress;
-  $('stat-done').textContent       = nDone;
-  $('progress-pct').textContent    = `${donePct}% complete`;
-
-  /* progress bar segments (% of total) */
-  const pct = n => total > 0 ? (n / total * 100).toFixed(1) + '%' : '0%';
-  $('pb-todo').style.width       = pct(nTodo);
-  $('pb-inprogress').style.width = pct(nProgress);
-  $('pb-done').style.width       = pct(nDone);
-  $('progress-bar-el').setAttribute('aria-valuenow', donePct);
-
-  /* --- team workload --- */
-  const workload = {};
-  state.teamMembers.forEach(m =>
-    workload[m] = { total: 0, inprogress: 0 });
-
-  tasks.forEach(t => {
-    if (!workload[t.assignee])
-      workload[t.assignee] = { total: 0, inprogress: 0 };
-    workload[t.assignee].total++;
-    if (t.status === 'inprogress') workload[t.assignee].inprogress++;
-  });
-
-  const maxTasks = Math.max(...Object.values(workload).map(w => w.total), 1);
-
-  $('team-workload').innerHTML = Object.entries(workload)
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([name, w]) => `
-      <div class="member-row" role="listitem">
-        ${avatarHTML(name, 32)}
-        <div class="member-info">
-          <div class="member-name">${esc(name)}</div>
-          <div class="member-sub">
-            ${w.total} task${w.total !== 1 ? 's' : ''}
-            · ${w.inprogress} active
-          </div>
-        </div>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-num">${w.total}</div>
-          <div class="mini-bar" aria-label="${w.total} tasks assigned">
-            <div class="mini-fill"
-                 style="width:${(w.total / maxTasks * 100).toFixed(0)}%"></div>
-          </div>
-        </div>
-      </div>`).join('') ||
-    '<p style="color:var(--muted);font-size:.85rem">No team members.</p>';
-
-  /* --- all-tasks list, sorted: in-progress → todo → done --- */
-  const sorted = [...tasks].sort((a, b) => {
-    const order = { inprogress: 0, todo: 1, done: 2 };
-    return (order[a.status] ?? 1) - (order[b.status] ?? 1);
-  });
-
-  $('all-tasks-list').innerHTML = sorted.length === 0
-    ? '<p style="color:var(--muted);font-size:.85rem">No tasks yet.</p>'
-    : sorted.map(t => {
-        const sCls = { todo:'sp-todo', inprogress:'sp-inprogress', done:'sp-done' }[t.status];
-        return `
-          <div class="task-row" role="listitem">
-            ${avatarHTML(t.assignee, 28)}
-            <div class="task-row-info">
-              <div class="task-row-title">${esc(t.title)}</div>
-              <div class="task-row-sub">${esc(t.assignee)} · ${timeAgo(t.createdAt)}</div>
-            </div>
-            <span class="s-pill ${sCls}"
-                  aria-label="Status: ${colLabel(t.status)}">
-              ${colLabel(t.status)}
-            </span>
-          </div>`;
-      }).join('');
-}
-
-/* ============================================================
-   MODAL OVERLAY CLICK-TO-CLOSE
-============================================================ */
-
-function onOverlayClick(e, modalId, closeFn) {
-  if (e.target.id === modalId) closeFn();
-}
-
-/* ============================================================
-   GLOBAL KEYBOARD SHORTCUTS
-============================================================ */
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeTaskModal();
-    closeDetailModal();
-  }
-  /* Ctrl/Cmd + Enter inside the task modal submits the form */
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    if ($('task-modal').style.display !== 'none') saveTask();
-  }
-});
-
-/* Enter inside the title field quickly submits the form */
-$('task-title').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveTask();
-});
-
-/* ============================================================
-   INIT
-============================================================ */
-
-loadState();
-renderBoard();
 </script>
 
 </body>

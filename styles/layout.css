@@ -1,0 +1,225 @@
+/* ============================================================
+   LAYOUT — screens, header, nav, main, views, responsive
+============================================================ */
+
+/* ── screens (login / setup) ── */
+.screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.screen.active { display: flex; }
+
+.auth-card,
+.setup-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  box-shadow: var(--sh-lg);
+  padding: 40px 44px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.auth-card .logo-big {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.auth-card p {
+  color: var(--muted);
+  font-size: .9rem;
+  margin-bottom: 28px;
+}
+
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 24px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: box-shadow .15s, border-color .15s;
+  width: 100%;
+  justify-content: center;
+}
+.google-signin-btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(99,102,241,.15);
+}
+
+.setup-card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.setup-card p {
+  color: var(--muted);
+  font-size: .85rem;
+  margin-bottom: 24px;
+}
+.setup-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  overflow: hidden;
+}
+.setup-tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.setup-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ── app wrapper ── */
+#app { display: none; }
+#app.active { display: block; }
+
+/* ── header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--sh);
+}
+
+.logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* ── nav ── */
+nav { display: flex; gap: 4px; }
+
+.nav-btn {
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--rs);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.nav-btn:hover        { background: var(--bg); color: var(--text); }
+.nav-btn.active       { background: var(--primary); color: #fff; }
+
+/* ── user menu ── */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.user-name {
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-org {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+/* ── search box ── */
+.search-box {
+  position: relative;
+}
+.search-box input {
+  width: 200px;
+  padding-left: 32px;
+}
+.search-box .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  font-size: .8rem;
+}
+
+/* ── main content area ── */
+main {
+  padding: 28px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* ── views ── */
+.view { display: none; }
+.view.active { display: block; }
+
+.view-hdr {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.view-hdr h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-right: auto;
+}
+
+/* ── responsive ── */
+@media (max-width: 1100px) {
+  .stats-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+  .dash-grid   { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 900px) {
+  .board { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 640px) {
+  header      { padding: 0 14px; gap: 10px; }
+  main        { padding: 14px; }
+  .form-row   { grid-template-columns: 1fr; }
+  .user-name  { display: none; }
+  .search-box input { width: 140px; }
+}

@@ -1,0 +1,9 @@
+# --- Secrets (never commit real keys) ---
+config.js
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
